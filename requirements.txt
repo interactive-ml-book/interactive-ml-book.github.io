@@ -3,5 +3,3 @@ pandas
 matplotlib
 tqdm
 scikit-learn
-torch
-torchvision
