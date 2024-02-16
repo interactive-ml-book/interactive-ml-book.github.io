@@ -388,7 +388,37 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diving-deep-into-machine-learning">Diving deep into Machine Learning</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-error-in-prediction-and-why-do-we-need-it">Defining the error in prediction and why do we need it?</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#finding-the-minimum-value-of-the-error-function-using-math-optimization">Finding the minimum value of the error function using math optimization</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradient-descent">Gradient Descent</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradient-descent">Gradient Descent</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mathematical-explanation">Mathematical Explanation</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#application-in-machine-learning">Application in Machine Learning</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-gradient-descent-in-machine-learning">Using Gradient Descent in Machine Learning</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#does-our-current-error-function-work-with-gradient-descent">Does our current error function work with Gradient Descent?</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-using-gradient-descent">Training using Gradient Descent</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tips-and-tricks-to-training-traditional-ml-models">Tips and Tricks to training traditional ML models</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tuning-hyperparameters">Tuning Hyperparameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#feature-engineering">Feature Engineering</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#implementing-callbacks">Implementing Callbacks</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#machine-learning-v-s-deep-learning">Machine Learning v/s Deep Learning</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#issues-with-very-large-deep-learning-models">Issues with Very Large Deep Learning Models</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mitigation-strategies">Mitigation Strategies</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-are-llms-trained">How are LLMs trained?</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#transformer-architecture">Transformer Architecture</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#training-process">Training Process</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#optimization-and-loss-functions">Optimization and Loss Functions</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mathematical-representation">Mathematical Representation</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#conclusion">Conclusion</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -512,43 +542,34 @@ document.write(`
 <section id="gradient-descent">
 <h3>Gradient Descent<a class="headerlink" href="#gradient-descent" title="Permalink to this heading">#</a></h3>
 <p>Gradient Descent is a <strong>general-purpose</strong> (not specific to machine learning) algorithm to find the global minima for a given convex function (and local minima for any non-convex function). A rudimentary definition of a convex function is a smooth function with single global minima without structural fluctuations.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-
-<span class="c1"># Defining the range for x including negative values</span>
-<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">400</span><span class="p">)</span>
-<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># Modulus of x</span>
-
-<span class="c1"># Derivative of |x|, which is undefined at x = 0</span>
-<span class="c1"># Using a piecewise function to represent the derivative</span>
-<span class="n">y_derivative</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">piecewise</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-
-<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
-
-<span class="c1"># Plotting modulus of x</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;|x|&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
-
-<span class="c1"># Plotting derivative of |x|</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y_derivative</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Derivative of |x|&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">)</span>
-
-<span class="c1"># Highlighting the point where the derivative is undefined</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;ro&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Undefined at x=0&#39;</span><span class="p">)</span>
-
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Modulus of x and Its Derivative&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<img alt="_images/a1c719eaf75f4b5f773a1612e66841eaa3356e80771aa16b4c8d1d5d51dc19f0.png" src="_images/a1c719eaf75f4b5f773a1612e66841eaa3356e80771aa16b4c8d1d5d51dc19f0.png" />
-</div>
-</div>
+<p>Gradient descent is an optimization algorithm used to minimize some function by iteratively moving in the direction of steepest descent as defined by the negative of the gradient. For a given function <span class="math notranslate nohighlight">\( c(x) \)</span>, where <span class="math notranslate nohighlight">\( x \)</span> represents the parameters of the function, gradient descent seeks to find the values of <span class="math notranslate nohighlight">\( x \)</span> that minimize <span class="math notranslate nohighlight">\( c(x) \)</span>.</p>
+<section id="mathematical-explanation">
+<h4>Mathematical Explanation<a class="headerlink" href="#mathematical-explanation" title="Permalink to this heading">#</a></h4>
+<p>Let <span class="math notranslate nohighlight">\( c(x) \)</span> be the cost function that we want to minimize, where <span class="math notranslate nohighlight">\( x = (x_1, x_2, \ldots, x_n) \)</span> is a vector of parameters.</p>
+<ol class="arabic simple">
+<li><p><strong>Gradient</strong>: The gradient of <span class="math notranslate nohighlight">\( c \)</span> at <span class="math notranslate nohighlight">\( x \)</span>, denoted as <span class="math notranslate nohighlight">\( \nabla c(x) \)</span>, is a vector containing the partial derivatives of <span class="math notranslate nohighlight">\( c \)</span> with respect to each parameter <span class="math notranslate nohighlight">\( x_i \)</span>, i.e.,</p></li>
+</ol>
+<div class="math notranslate nohighlight" id="equation-gradient-descent">
+<span class="eqno">(4)<a class="headerlink" href="#equation-gradient-descent" title="Permalink to this equation">#</a></span>\[\nabla c(x) = \left( \frac{\partial c}{\partial x_1}, \frac{\partial c}{\partial x_2}, \ldots, \frac{\partial c}{\partial x_n} \right)\]</div>
+<ol class="arabic simple" start="2">
+<li><p><strong>Update Rule</strong>: Starting with an initial guess for <span class="math notranslate nohighlight">\( x \)</span>, the parameters are updated iteratively according to the rule</p></li>
+</ol>
+<div class="math notranslate nohighlight" id="equation-gradient-update">
+<span class="eqno">(5)<a class="headerlink" href="#equation-gradient-update" title="Permalink to this equation">#</a></span>\[x_{\text{next}} = x - \alpha \nabla c(x)\]</div>
+<p>where <span class="math notranslate nohighlight">\( \alpha \)</span> is the learning rate, a positive scalar determining the size of the step.</p>
+<ol class="arabic simple" start="3">
+<li><p><strong>Iteration</strong>: This process is repeated until <span class="math notranslate nohighlight">\( \nabla c(x) \)</span> is close to zero or until the change in the cost function between iterations is below a predetermined threshold, indicating that a minimum has been reached.</p></li>
+</ol>
+</section>
+<section id="application-in-machine-learning">
+<h4>Application in Machine Learning<a class="headerlink" href="#application-in-machine-learning" title="Permalink to this heading">#</a></h4>
+<p>In machine learning, gradient descent is used to optimize the loss function, which measures the difference between the predicted output of the model and the actual output. The parameters <span class="math notranslate nohighlight">\( x \)</span> represent the weights and biases of the model.</p>
+<ol class="arabic simple">
+<li><p><strong>Loss Function</strong>: For a given dataset and a model, the loss function <span class="math notranslate nohighlight">\( c(x) \)</span> quantifies the error of the model predictions. Common examples include Mean Squared Error for regression tasks and Cross-Entropy Loss for classification tasks.</p></li>
+<li><p><strong>Minimizing the Loss</strong>: By applying gradient descent to the loss function, we iteratively adjust the model parameters to minimize the loss. This process improves the model’s predictions over time.</p></li>
+<li><p><strong>Backpropagation</strong>: In the context of neural networks, gradient descent is used in conjunction with backpropagation, a method for efficiently computing the gradient of the loss function with respect to each weight by chain rule, allowing the model to learn from the data.</p></li>
+</ol>
+<p>Gradient descent is a fundamental algorithm in machine learning for training models, enabling them to learn from data by minimizing the error between predicted and actual outputs. Its efficiency and simplicity make it suitable for a wide range of problems and model types.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
@@ -599,6 +620,669 @@ document.write(`
 <img alt="_images/2fc37245a38144b2bf1f9e84c497265e34aba700cc3352a87afcb1f3e7f66a01.png" src="_images/2fc37245a38144b2bf1f9e84c497265e34aba700cc3352a87afcb1f3e7f66a01.png" />
 </div>
 </div>
+</section>
+</section>
+<section id="using-gradient-descent-in-machine-learning">
+<h3>Using Gradient Descent in Machine Learning<a class="headerlink" href="#using-gradient-descent-in-machine-learning" title="Permalink to this heading">#</a></h3>
+<ol class="arabic simple">
+<li><p>We have an error function <span class="math notranslate nohighlight">\(E\)</span> <a class="reference internal" href="#equation-wrong-error-2">(3)</a>, which is parametrized by the values of <span class="math notranslate nohighlight">\(w\)</span> and <span class="math notranslate nohighlight">\(b\)</span>, that we would like to minimize.</p></li>
+<li><p>Minimizing this error function will make our function <span class="math notranslate nohighlight">\(f(x)\)</span> find the best fit.</p></li>
+<li><p>We have a bunch of data points <span class="math notranslate nohighlight">\((x, y)\)</span> that we can use to iteratively find the minimum of the error function using the Gradient Descent algorithm.</p></li>
+</ol>
+<div class="admonition-gradient-descent-is-not-machine-learning admonition">
+<p class="admonition-title">Gradient Descent is not Machine Learning</p>
+<p>Now you see how we utilized a mathematical optimization algorithm to solve a Machine Learning problem in mind. Many might have a misconception that gradient descent is a machine learning algorithm, but in reality, machine learning utilizes an existing optimization algorithm such as gradient descent.</p>
+</div>
+</section>
+<section id="does-our-current-error-function-work-with-gradient-descent">
+<h3>Does our current error function work with Gradient Descent?<a class="headerlink" href="#does-our-current-error-function-work-with-gradient-descent" title="Permalink to this heading">#</a></h3>
+<p>Let’s take another look at <a class="reference internal" href="#equation-wrong-error-2">(3)</a> and <a class="reference internal" href="#equation-gradient-update">(5)</a></p>
+<div class="math notranslate nohighlight">
+\[
+E(\hat{y}) = \sum_{i=1}^{N} |(\hat{y}-y)|
+\]</div>
+<div class="math notranslate nohighlight">
+\[
+x_{\text{next}} = x - \alpha \nabla c(x)
+\]</div>
+<p>We see from the gradient update equation that, to iteratively minimize the cost function <span class="math notranslate nohighlight">\(C(x)\)</span> (which is the function <span class="math notranslate nohighlight">\(E\)</span> in our case), we have to differentiate (partially with all the variables) the error/cost function. This means we have to ind the differentiation of modulus function present in our error function. <span style="color:red">However, we know that the derivative of modulus function is undefined at</span> <span class="math notranslate nohighlight">\(x=0\)</span>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># Defining the range for x including negative values</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">400</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># Modulus of x</span>
+
+<span class="c1"># Derivative of |x|, which is undefined at x = 0</span>
+<span class="c1"># Using a piecewise function to represent the derivative</span>
+<span class="n">y_derivative</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">piecewise</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">[</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+
+<span class="c1"># Plotting modulus of x</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;|x|&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+
+<span class="c1"># Plotting derivative of |x|</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y_derivative</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Derivative of |x|&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">)</span>
+
+<span class="c1"># Highlighting the point where the derivative is undefined</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;ro&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Undefined at x=0&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Modulus of x and Its Derivative&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/a1c719eaf75f4b5f773a1612e66841eaa3356e80771aa16b4c8d1d5d51dc19f0.png" src="_images/a1c719eaf75f4b5f773a1612e66841eaa3356e80771aa16b4c8d1d5d51dc19f0.png" />
+</div>
+</div>
+<p><strong>This means, in order to use the gradient descent algorithm, we need a differentiable cost function throughout the real-line and incorporates the characteristics of our previous error metrics</strong> i.e., high values when the prediction is wrong, and smaller values when the predictions are right.</p>
+<p>Here comes the <strong>Mean Square Error Loss</strong> which is the sum of squares of differences between predictions and true values (for continuous number prediction).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.mplot3d</span> <span class="kn">import</span> <span class="n">Axes3D</span>
+
+<span class="c1"># Generating synthetic data for demonstration</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="n">y_actual</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="n">y_pred</span> <span class="o">=</span> <span class="n">y_actual</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+<span class="c1"># Mean Squared Error Loss function</span>
+<span class="k">def</span> <span class="nf">mse_loss</span><span class="p">(</span><span class="n">y_actual</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">((</span><span class="n">y_actual</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+<span class="c1"># Calculate MSE for a range of predictions</span>
+<span class="n">y_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">y_pred</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">y_pred</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="mi">100</span><span class="p">)</span>
+<span class="n">mse_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">y_actual</span><span class="p">,</span> <span class="n">yi</span><span class="p">)</span> <span class="k">for</span> <span class="n">yi</span> <span class="ow">in</span> <span class="n">y_range</span><span class="p">]</span>
+
+<span class="c1"># 2D Plot</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+
+<span class="c1"># 2D subplot</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">y_range</span><span class="p">,</span> <span class="n">mse_values</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;MSE Loss&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Predicted Values&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;MSE Loss&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;2D MSE Loss&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+<span class="c1"># 3D subplot</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;3d&#39;</span><span class="p">)</span>
+<span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">y_range</span><span class="p">,</span> <span class="n">y_range</span><span class="p">)</span>
+<span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">Z</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">mse_loss</span><span class="p">(</span><span class="n">y_actual</span><span class="p">,</span> <span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">Y</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">plot_surface</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Predicted Values X&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Predicted Values Y&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_zlabel</span><span class="p">(</span><span class="s1">&#39;MSE Loss&#39;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;3D MSE Loss&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/48d03d81c9bab292af6a3f056baba3fbf03bd3e2157acbdea2cc87043f3f2de3.png" src="_images/48d03d81c9bab292af6a3f056baba3fbf03bd3e2157acbdea2cc87043f3f2de3.png" />
+</div>
+</div>
+<p>Now that we have the error function ready to suit the requirements of gradient descent, let’s look for any additional variables introduced by Gradient Descent. A closer look at the above loss values suggests that Scikit-Learn uses Batch Gradient Descent by default. If we take a look at the equation <a class="reference internal" href="#equation-gradient-update">(5)</a>, we see that a new term <span class="math notranslate nohighlight">\(\alpha\)</span> is introduced by Gradient Descent.</p>
+<p>This is formally known as the <strong>Learning rate</strong> and this is a hyper-parameter.</p>
+<div class="tip admonition">
+<p class="admonition-title">What are Hyper-parameters?</p>
+<p>Hyperparameters are the configuration settings used to structure the learning process in machine learning algorithms. Unlike model parameters, which the model learns during training, hyperparameters are set before training begins and guide the training process. Examples include the learning rate, number of iterations, and batch size in gradient descent, or the depth of a tree in decision trees.</p>
+<p>Hyperparameters are tuned through various strategies to find the combination that yields the best model performance, typically measured by a validation metric. Common tuning methods include:</p>
+<ul class="simple">
+<li><p><strong>Grid Search</strong>: Tests every combination of hyperparameters in a predefined set.</p></li>
+<li><p><strong>Random Search</strong>: Randomly samples combinations of hyperparameters over a specified search space.</p></li>
+<li><p><strong>Bayesian Optimization</strong>: Uses a probabilistic model to predict which hyperparameters might lead to better results and prioritizes testing those.</p></li>
+<li><p><strong>Gradient-based Optimization</strong>: Adjusts hyperparameters in a direction that minimally increases the validation loss, applicable when hyperparameters are continuous.
+The goal of hyperparameter tuning is to find the optimal settings that minimize the validation loss, thus improving the model’s ability to generalize to unseen data.</p></li>
+</ul>
+</div>
+</section>
+</section>
+<section id="training-using-gradient-descent">
+<h2>Training using Gradient Descent<a class="headerlink" href="#training-using-gradient-descent" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="c1"># Generate synthetic data</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>  <span class="c1"># 100 data points</span>
+<span class="n">y</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span> <span class="c1"># + np.random.normal(scale=0.5, size=x.shape)  # True function is y = 2x + 1 with noise</span>
+
+<span class="c1"># Split data into train, validation, and test sets</span>
+<span class="n">train_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.6</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="n">val_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.2</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+<span class="n">test_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">train_size</span> <span class="o">-</span> <span class="n">val_size</span>
+
+<span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:</span><span class="n">train_size</span><span class="p">],</span> <span class="n">y</span><span class="p">[:</span><span class="n">train_size</span><span class="p">]</span>
+<span class="n">x_val</span><span class="p">,</span> <span class="n">y_val</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">train_size</span><span class="p">:</span><span class="n">train_size</span><span class="o">+</span><span class="n">val_size</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">train_size</span><span class="p">:</span><span class="n">train_size</span><span class="o">+</span><span class="n">val_size</span><span class="p">]</span>
+<span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">train_size</span><span class="o">+</span><span class="n">val_size</span><span class="p">:],</span> <span class="n">y</span><span class="p">[</span><span class="n">train_size</span><span class="o">+</span><span class="n">val_size</span><span class="p">:]</span>
+
+<span class="c1"># Gradient Descent parameters</span>
+<span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">iterations</span> <span class="o">=</span> <span class="mi">500</span>
+<span class="n">w</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">()</span>  <span class="c1"># Initial parameters</span>
+
+<span class="c1"># Mean Squared Error Loss function</span>
+<span class="k">def</span> <span class="nf">mse</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">((</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+<span class="c1"># Gradient Descent function</span>
+<span class="k">def</span> <span class="nf">gradient_descent</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">learning_rate</span><span class="p">,</span> <span class="n">iterations</span><span class="p">):</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">mse_history</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iterations</span><span class="p">):</span>
+        <span class="c1"># Prediction</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="n">w</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">b</span>
+        
+        <span class="c1"># Calculate gradients</span>
+        <span class="n">dw</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">))</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">)</span>
+        
+        <span class="c1"># Update weights</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">w</span> <span class="o">-</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">dw</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">db</span>
+        
+        <span class="c1"># Calculate loss</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">mse</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+        <span class="n">mse_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+        
+        <span class="c1"># print(f&quot;Iteration {i+1}: MSE = {loss}&quot;)</span>
+
+    <span class="k">return</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">mse_history</span>
+
+<span class="c1"># Train the model</span>
+<span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">mse_history</span> <span class="o">=</span> <span class="n">gradient_descent</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">learning_rate</span><span class="p">,</span> <span class="n">iterations</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Final loss value&quot;</span><span class="p">,</span> <span class="n">mse_history</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="c1"># Plotting MSE history</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">mse_history</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;MSE Loss&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Iteration&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;MSE Loss&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;MSE Loss During Training.&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Optimal values for w and b are&quot;</span><span class="p">,</span> <span class="nb">round</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Final loss value 2.9769204946318854e-10
+</pre></div>
+</div>
+<img alt="_images/8bc258a40ef96015103d398790b53653a34c82c3481706d1a2d577648c5e3b8c.png" src="_images/8bc258a40ef96015103d398790b53653a34c82c3481706d1a2d577648c5e3b8c.png" />
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Optimal values for w and b are 2.0 1.0
+</pre></div>
+</div>
+</div>
+</div>
+<section id="tips-and-tricks-to-training-traditional-ml-models">
+<h3>Tips and Tricks to training traditional ML models<a class="headerlink" href="#tips-and-tricks-to-training-traditional-ml-models" title="Permalink to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="c1"># Common setup</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="n">learning_rate</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">iterations</span> <span class="o">=</span> <span class="mi">10000</span>
+
+<span class="c1"># Mean Squared Error Loss function</span>
+<span class="k">def</span> <span class="nf">mse_loss</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">((</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+<span class="c1"># Batch Gradient Descent function</span>
+<span class="k">def</span> <span class="nf">batch_gradient_descent</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">learning_rate</span><span class="p">,</span> <span class="n">iterations</span><span class="p">):</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">w</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">()</span>
+    <span class="n">losses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iterations</span><span class="p">):</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="n">w</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">b</span>
+        <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">))</span>
+        <span class="n">dw</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">))</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">)</span>
+        <span class="n">w</span> <span class="o">-=</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">dw</span>
+        <span class="n">b</span> <span class="o">-=</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">db</span>
+    <span class="k">return</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">losses</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+
+<span class="c1"># Stochastic Gradient Descent function</span>
+<span class="k">def</span> <span class="nf">stochastic_gradient_descent</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">learning_rate</span><span class="p">,</span> <span class="n">iterations</span><span class="p">):</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">w</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">()</span>
+    <span class="n">losses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iterations</span><span class="p">):</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">x_i</span><span class="p">,</span> <span class="n">y_i</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="n">w</span> <span class="o">*</span> <span class="n">x_i</span> <span class="o">+</span> <span class="n">b</span>
+        <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">y_i</span><span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">y_pred</span><span class="p">])))</span>
+        <span class="n">dw</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">x_i</span> <span class="o">*</span> <span class="p">(</span><span class="n">y_i</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">)</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">y_i</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">)</span>
+        <span class="n">w</span> <span class="o">-=</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">dw</span>
+        <span class="n">b</span> <span class="o">-=</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">db</span>
+    <span class="k">return</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">losses</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+
+<span class="c1"># Mini-batch Gradient Descent function</span>
+<span class="k">def</span> <span class="nf">mini_batch_gradient_descent</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">learning_rate</span><span class="p">,</span> <span class="n">iterations</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">w</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">()</span>
+    <span class="n">losses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iterations</span><span class="p">):</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">x_i</span><span class="p">,</span> <span class="n">y_i</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="n">w</span> <span class="o">*</span> <span class="n">x_i</span> <span class="o">+</span> <span class="n">b</span>
+        <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">y_i</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">))</span>
+        <span class="n">dw</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">batch_size</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x_i</span><span class="p">,</span> <span class="p">(</span><span class="n">y_i</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">))</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">batch_size</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y_i</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">)</span>
+        <span class="n">w</span> <span class="o">-=</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">dw</span>
+        <span class="n">b</span> <span class="o">-=</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">db</span>
+    <span class="k">return</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">losses</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+
+<span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">mean_squared_error</span>
+
+<span class="c1"># Run each gradient descent type</span>
+<span class="n">bgd_w</span><span class="p">,</span> <span class="n">bgd_b</span><span class="p">,</span> <span class="n">bgd_loss</span><span class="p">,</span> <span class="n">bgd_time</span> <span class="o">=</span> <span class="n">batch_gradient_descent</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">learning_rate</span><span class="p">,</span> <span class="n">iterations</span><span class="p">)</span>
+<span class="n">sgd_w</span><span class="p">,</span> <span class="n">sgd_b</span><span class="p">,</span> <span class="n">sgd_loss</span><span class="p">,</span> <span class="n">sgd_time</span> <span class="o">=</span> <span class="n">stochastic_gradient_descent</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">learning_rate</span><span class="p">,</span> <span class="n">iterations</span><span class="p">)</span>
+<span class="n">mbgd_w</span><span class="p">,</span> <span class="n">mbgd_b</span><span class="p">,</span> <span class="n">mbgd_loss</span><span class="p">,</span> <span class="n">mbgd_time</span> <span class="o">=</span> <span class="n">mini_batch_gradient_descent</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">learning_rate</span><span class="p">,</span> <span class="n">iterations</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Batch Gradient Descent Time: </span><span class="si">{</span><span class="n">bgd_time</span><span class="si">}</span><span class="s2"> seconds, Final Loss: </span><span class="si">{</span><span class="n">bgd_loss</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stochastic Gradient Descent Time: </span><span class="si">{</span><span class="n">sgd_time</span><span class="si">}</span><span class="s2"> seconds, Final Loss: </span><span class="si">{</span><span class="n">sgd_loss</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mini-Batch Gradient Descent Time: </span><span class="si">{</span><span class="n">mbgd_time</span><span class="si">}</span><span class="s2"> seconds, Final Loss: </span><span class="si">{</span><span class="n">mbgd_loss</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-----------------------------------------------------&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Let&#39;s test with Scikit-Learn&#39;s implementation&quot;</span><span class="p">)</span>
+
+<span class="c1"># Fit the model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">y</span><span class="p">)</span>
+
+<span class="c1"># Predict using the model</span>
+<span class="n">y_pred_sklearn</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+<span class="c1"># Calculate MSE for Scikit-learn&#39;s implementation</span>
+<span class="n">mse_sklearn</span> <span class="o">=</span> <span class="n">mean_squared_error</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">y_pred_sklearn</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Scikit-learn LinearRegression MSE: </span><span class="si">{</span><span class="n">mse_sklearn</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Batch Gradient Descent Time: 0.18442487716674805 seconds, Final Loss: 0.24044086764058123
+Stochastic Gradient Descent Time: 0.09557771682739258 seconds, Final Loss: 0.024073576338893586
+Mini-Batch Gradient Descent Time: 0.4299464225769043 seconds, Final Loss: 0.2989110091910686
+-----------------------------------------------------
+Let&#39;s test with Scikit-Learn&#39;s implementation
+Scikit-learn LinearRegression MSE: 0.2404408676405812
+</pre></div>
+</div>
+</div>
+</div>
+<section id="tuning-hyperparameters">
+<h4>Tuning Hyperparameters<a class="headerlink" href="#tuning-hyperparameters" title="Permalink to this heading">#</a></h4>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+
+<span class="c1"># Generate synthetic data</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+<span class="c1"># Split the data</span>
+<span class="n">x_train</span><span class="p">,</span> <span class="n">x_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+
+<span class="c1"># Batch Gradient Descent function</span>
+<span class="k">def</span> <span class="nf">batch_gradient_descent</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">learning_rate</span><span class="p">,</span> <span class="n">iterations</span><span class="p">):</span>
+    <span class="n">w</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">()</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iterations</span><span class="p">):</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="n">w</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">b</span>
+        <span class="n">dw</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">))</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="n">n</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">)</span>
+        <span class="n">w</span> <span class="o">-=</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">dw</span>
+        <span class="n">b</span> <span class="o">-=</span> <span class="n">learning_rate</span> <span class="o">*</span> <span class="n">db</span>
+    <span class="k">return</span> <span class="n">w</span><span class="p">,</span> <span class="n">b</span>
+
+<span class="c1"># Mean Squared Error Loss function</span>
+<span class="k">def</span> <span class="nf">mse_loss</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">((</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+<span class="c1"># Hyperparameter tuning</span>
+<span class="n">learning_rates</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]</span>
+<span class="n">iterations</span> <span class="o">=</span> <span class="p">[</span><span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">]</span>
+<span class="n">best_loss</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+<span class="n">best_lr</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">best_iter</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">for</span> <span class="n">lr</span> <span class="ow">in</span> <span class="n">learning_rates</span><span class="p">:</span>
+    <span class="k">for</span> <span class="nb">iter</span> <span class="ow">in</span> <span class="n">iterations</span><span class="p">:</span>
+        <span class="n">w</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">batch_gradient_descent</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">lr</span><span class="p">,</span> <span class="nb">iter</span><span class="p">)</span>
+        <span class="n">y_pred</span> <span class="o">=</span> <span class="n">w</span> <span class="o">*</span> <span class="n">x_test</span> <span class="o">+</span> <span class="n">b</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">mse_loss</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">loss</span> <span class="o">&lt;</span> <span class="n">best_loss</span><span class="p">:</span>
+            <span class="n">best_loss</span> <span class="o">=</span> <span class="n">loss</span>
+            <span class="n">best_lr</span> <span class="o">=</span> <span class="n">lr</span>
+            <span class="n">best_iter</span> <span class="o">=</span> <span class="nb">iter</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Best Learning Rate: </span><span class="si">{</span><span class="n">best_lr</span><span class="si">}</span><span class="s2">, Best Iterations: </span><span class="si">{</span><span class="n">best_iter</span><span class="si">}</span><span class="s2">, Best Loss: </span><span class="si">{</span><span class="n">best_loss</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Best Learning Rate: 0.5, Best Iterations: 100, Best Loss: 0.3717253690652533
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="feature-engineering">
+<h4>Feature Engineering<a class="headerlink" href="#feature-engineering" title="Permalink to this heading">#</a></h4>
+<p>Feature engineering is the process of using domain knowledge to extract features (characteristics, properties, attributes) from raw data. These features can be used to improve the performance of machine learning algorithms. Feature engineering aims to create meaningful features that capture underlying patterns in the data, thereby enhancing model accuracy and performance.</p>
+<p>Demonstrating the Importance of Feature Engineering
+Let’s use a synthetic dataset to illustrate how introducing higher-order features can improve the performance of a logistic regression model. We’ll create a dataset where the relationship between the input features and the output label is not linearly separable, necessitating the use of higher-order polynomial features for effective classification.</p>
+<p>This is visually explained by TensorFlow in their <a class="reference external" href="https://playground.tensorflow.org/#activation=tanh&amp;batchSize=10&amp;dataset=circle&amp;regDataset=reg-plane&amp;learningRate=0.03&amp;regularizationRate=0&amp;noise=0&amp;networkShape=1&amp;seed=0.90025&amp;showTestData=false&amp;discretize=false&amp;percTrainData=50&amp;x=true&amp;y=true&amp;xTimesY=false&amp;xSquared=false&amp;ySquared=false&amp;cosX=false&amp;sinX=false&amp;cosY=false&amp;sinY=false&amp;collectStats=false&amp;problem=classification&amp;initZero=false&amp;hideText=false">TensorFlow Playground</a></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">make_moons</span>
+<span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LogisticRegression</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">PolynomialFeatures</span>
+<span class="kn">from</span> <span class="nn">sklearn.pipeline</span> <span class="kn">import</span> <span class="n">Pipeline</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">accuracy_score</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="c1"># Generate synthetic dataset</span>
+<span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">make_moons</span><span class="p">(</span><span class="n">n_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="c1"># Split into training and test sets</span>
+<span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+
+<span class="c1"># Logistic Regression without feature engineering</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">()</span>
+<span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+<span class="n">accuracy_without_fe</span> <span class="o">=</span> <span class="n">accuracy_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">predictions</span><span class="p">)</span>
+
+<span class="c1"># Logistic Regression with Polynomial Features</span>
+<span class="n">degrees</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+<span class="n">accuracies</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">degree</span> <span class="ow">in</span> <span class="n">degrees</span><span class="p">:</span>
+    <span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">([</span>
+        <span class="p">(</span><span class="s2">&quot;poly_features&quot;</span><span class="p">,</span> <span class="n">PolynomialFeatures</span><span class="p">(</span><span class="n">degree</span><span class="o">=</span><span class="n">degree</span><span class="p">)),</span>
+        <span class="p">(</span><span class="s2">&quot;logistic_regression&quot;</span><span class="p">,</span> <span class="n">LogisticRegression</span><span class="p">())</span>
+    <span class="p">])</span>
+    <span class="n">pipeline</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+    <span class="n">predictions</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+    <span class="n">accuracy</span> <span class="o">=</span> <span class="n">accuracy_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">predictions</span><span class="p">)</span>
+    <span class="n">accuracies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">accuracy</span><span class="p">)</span>
+
+<span class="c1"># Plotting accuracies</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">degrees</span><span class="p">,</span> <span class="p">[</span><span class="n">accuracy_without_fe</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">degrees</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Without Feature Engineering&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">degrees</span><span class="p">,</span> <span class="n">accuracies</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;With Feature Engineering&#39;</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Degree of Polynomial Features&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Accuracy&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Effect of Feature Engineering on Accuracy&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Accuracy without feature engineering: </span><span class="si">{</span><span class="n">accuracy_without_fe</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy with feature engineering:&quot;</span><span class="p">,</span> <span class="n">accuracies</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/ca8ba164e69cc1e4da39dc2f6c95612eee89db3e1f1f08e226b5da535c1d1fb7.png" src="_images/ca8ba164e69cc1e4da39dc2f6c95612eee89db3e1f1f08e226b5da535c1d1fb7.png" />
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Accuracy without feature engineering: 0.8333333333333334
+Accuracy with feature engineering: 0.9333333333333333
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="implementing-callbacks">
+<h4>Implementing Callbacks<a class="headerlink" href="#implementing-callbacks" title="Permalink to this heading">#</a></h4>
+<p>Callbacks in machine learning are functions that are executed at certain stages of the training process, such as at the start or end of an epoch, before or after a batch, or at the end of the training. They provide a way to automate certain tasks during the training process, such as saving models, adjusting learning rates, early stopping if the model isn’t improving, or logging metrics.</p>
+<p>Implementing a Simple Callback
+Below is an example of implementing a simple callback system from scratch, including a callback for displaying training progress and performing early stopping if the validation loss stops improving.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># This is a pseudo-code for a simple Callbacks function</span>
+<span class="k">class</span> <span class="nc">Callback</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">on_train_begin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">on_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<span class="k">class</span> <span class="nc">PrintProgressCallback</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">on_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Epoch: </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">, Loss: </span><span class="si">{</span><span class="n">logs</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">, Val Loss: </span><span class="si">{</span><span class="n">logs</span><span class="p">[</span><span class="s1">&#39;val_loss&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">EarlyStoppingCallback</span><span class="p">(</span><span class="n">Callback</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">patience</span> <span class="o">=</span> <span class="n">patience</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_loss</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wait</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="k">def</span> <span class="nf">on_epoch_end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">current_loss</span> <span class="o">=</span> <span class="n">logs</span><span class="p">[</span><span class="s1">&#39;val_loss&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">current_loss</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_loss</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">best_loss</span> <span class="o">=</span> <span class="n">current_loss</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wait</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wait</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wait</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">patience</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stopping early at epoch </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">stop_training</span> <span class="o">=</span> <span class="kc">True</span>
+
+<span class="c1"># Dummy training function with callbacks</span>
+<span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">epochs</span><span class="p">,</span> <span class="n">callbacks</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">epochs</span><span class="p">):</span>
+        <span class="c1"># Dummy loss calculations</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">val_loss</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.1</span>
+        
+        <span class="c1"># Simulate early stopping mechanism</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">&#39;stop_training&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">model</span><span class="o">.</span><span class="n">stop_training</span><span class="p">:</span>
+            <span class="k">break</span>
+        
+        <span class="n">logs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;loss&#39;</span><span class="p">:</span> <span class="n">loss</span><span class="p">,</span> <span class="s1">&#39;val_loss&#39;</span><span class="p">:</span> <span class="n">val_loss</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">callback</span> <span class="ow">in</span> <span class="n">callbacks</span><span class="p">:</span>
+            <span class="n">callback</span><span class="o">.</span><span class="n">on_epoch_end</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">logs</span><span class="p">)</span>
+
+<span class="c1"># Dummy model object</span>
+<span class="k">class</span> <span class="nc">Model</span><span class="p">:</span>
+    <span class="n">stop_training</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">()</span>
+<span class="n">callbacks</span> <span class="o">=</span> <span class="p">[</span><span class="n">PrintProgressCallback</span><span class="p">(),</span> <span class="n">EarlyStoppingCallback</span><span class="p">(</span><span class="n">patience</span><span class="o">=</span><span class="mi">3</span><span class="p">)]</span>
+<span class="n">train</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">callbacks</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Take a look at PyTorch’s Callbacks <a class="reference external" href="https://pytorch.org/tnt/stable/framework/callbacks.html">documentation</a> for more info.</p>
+</section>
+</section>
+</section>
+<section id="machine-learning-v-s-deep-learning">
+<h2>Machine Learning v/s Deep Learning<a class="headerlink" href="#machine-learning-v-s-deep-learning" title="Permalink to this heading">#</a></h2>
+<p><img alt="" src="https://kajabi-storefronts-production.kajabi-cdn.com/kajabi-storefronts-production/file-uploads/blogs/22606/images/e63c7ab-276c-cfb2-3f2a-80446bedb8b_electronics-09-00483-g001.webp" /></p>
+<section id="issues-with-very-large-deep-learning-models">
+<h3>Issues with Very Large Deep Learning Models<a class="headerlink" href="#issues-with-very-large-deep-learning-models" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Memory Constraints: Large models require significant memory, which can exceed the capacity of a single GPU or even a single machine.</p></li>
+<li><p>Computation Time: Training large models is computationally intensive, leading to longer training times.</p></li>
+<li><p>Overfitting: Without enough data, large models can overfit, learning to memorize the training data rather than generalize from it.</p></li>
+</ul>
+<section id="mitigation-strategies">
+<h4>Mitigation Strategies<a class="headerlink" href="#mitigation-strategies" title="Permalink to this heading">#</a></h4>
+<ol class="arabic simple">
+<li><p>Data Parallelism
+Distributes the data across different processors (e.g., GPUs) to train the model in parallel. Each processor computes gradients on a subset of the data, and gradients are averaged across all processors before updating the model parameters.</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Pseudocode</span>
+<span class="c1"># PyTorch Example for Data Parallelism</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">torch.optim</span> <span class="k">as</span> <span class="nn">optim</span>
+<span class="kn">from</span> <span class="nn">torch.nn.parallel</span> <span class="kn">import</span> <span class="n">DataParallel</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">MyLargeModel</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">device_count</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">DataParallel</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+<span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_function</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>PyTorch Documentation: <span class="xref myst">DataParallel</span></p>
+<ol class="arabic simple" start="2">
+<li><p>Model Parallelism
+Splits the model across different processors. Each part of the model runs on a different processor and communicates with others as needed.</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Pseudocode</span>
+<span class="c1"># PyTorch Example for Model Parallelism</span>
+<span class="k">class</span> <span class="nc">ModelParallelLargeModel</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ModelParallelLargeModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">part1</span> <span class="o">=</span> <span class="n">Part1</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">part2</span> <span class="o">=</span> <span class="n">Part2</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device2</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">part1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device2</span><span class="p">)</span>  <span class="c1"># Move intermediate output to device 2</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">part2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+</pre></div>
+</div>
+<p>PyTorch Documentation: <span class="xref myst">Model Parallel Best Practices</span></p>
+<ol class="arabic simple" start="3">
+<li><p>Distributed Training
+Involves training across multiple machines, each possibly having one or more GPUs. This can further scale training beyond what’s possible on a single machine.</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># PyTorch Example for Distributed Training</span>
+<span class="kn">import</span> <span class="nn">torch.distributed</span> <span class="k">as</span> <span class="nn">dist</span>
+
+<span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">world_size</span><span class="p">):</span>
+    <span class="n">setup</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">world_size</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">MyLargeModel</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">rank</span><span class="p">)</span>
+    <span class="n">dist</span><span class="o">.</span><span class="n">init_process_group</span><span class="p">(</span><span class="s2">&quot;nccl&quot;</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="n">rank</span><span class="p">,</span> <span class="n">world_size</span><span class="o">=</span><span class="n">world_size</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">DistributedDataParallel</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">device_ids</span><span class="o">=</span><span class="p">[</span><span class="n">rank</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_function</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+        <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+    
+    <span class="n">cleanup</span><span class="p">()</span>
+
+<span class="c1"># Launch training across 4 GPUs</span>
+<span class="n">world_size</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">mp</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">train</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">world_size</span><span class="p">,),</span> <span class="n">nprocs</span><span class="o">=</span><span class="n">world_size</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>PyTorch Documentation: <span class="xref myst">DistributedDataParallel</span></p>
+<ol class="arabic simple" start="4">
+<li><p>Mixed Precision Training
+Uses both 16-bit and 32-bit floating-point types during training to reduce memory usage and speed up training without significantly affecting model accuracy.</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># PyTorch Example for Mixed Precision Training</span>
+<span class="kn">from</span> <span class="nn">torch.cuda.amp</span> <span class="kn">import</span> <span class="n">autocast</span><span class="p">,</span> <span class="n">GradScaler</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">MyLargeModel</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="n">learning_rate</span><span class="p">)</span>
+<span class="n">scaler</span> <span class="o">=</span> <span class="n">GradScaler</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">dataloader</span><span class="p">:</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+    
+    <span class="k">with</span> <span class="n">autocast</span><span class="p">():</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_function</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+    
+    <span class="n">scaler</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+    <span class="n">scaler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">optimizer</span><span class="p">)</span>
+    <span class="n">scaler</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>PyTorch Documentation: <span class="xref myst">Automatic Mixed Precision</span></p>
+</section>
+</section>
+<section id="how-are-llms-trained">
+<h3>How are LLMs trained?<a class="headerlink" href="#how-are-llms-trained" title="Permalink to this heading">#</a></h3>
+<p>Large Language Models (LLMs), like GPT (Generative Pre-trained Transformer) and BERT (Bidirectional Encoder Representations from Transformers), are trained using a combination of deep learning techniques and natural language processing principles. The core mathematical concepts behind their training include Transformer architecture, optimization algorithms, and loss functions. Here’s a brief overview:</p>
+<section id="transformer-architecture">
+<h4>Transformer Architecture<a class="headerlink" href="#transformer-architecture" title="Permalink to this heading">#</a></h4>
+<p>The Transformer model, introduced in the paper “Attention is All You Need” by Vaswani et al., is the backbone of most LLMs. It’s based on self-attention mechanisms that allow the model to weigh the importance of different words within the input data.</p>
+<p><strong>Key Components:</strong></p>
+<ul class="simple">
+<li><p><strong>Embeddings</strong>: Input words are converted into vectors using embeddings. Positional encodings are added to maintain the sequence order.</p></li>
+<li><p><strong>Attention Mechanism</strong>: The model calculates attention scores to determine how much focus each word in the sentence should have on other words. This is mathematically represented as a weighted sum of value vectors, scaled by the compatibility of key-query pairs.</p></li>
+<li><p><strong>Multi-Head Attention</strong>: Allows the model to jointly attend to information from different representation subspaces at different positions.</p></li>
+<li><p><strong>Feed-Forward Neural Networks</strong>: Applied to each position separately and identically.</p></li>
+<li><p><strong>Normalization and Residual Connections</strong>: Help in stabilizing the training of deep networks.</p></li>
+</ul>
+</section>
+<section id="training-process">
+<h4>Training Process<a class="headerlink" href="#training-process" title="Permalink to this heading">#</a></h4>
+<ol class="arabic simple">
+<li><p><strong>Pre-training</strong>: LLMs are initially pre-trained on vast amounts of text data. This phase involves unsupervised learning tasks, such as predicting the next word in a sentence (for models like GPT) or masked language modeling (for models like BERT), where the model learns to predict masked words based on the context provided by the non-masked words.</p></li>
+<li><p><strong>Fine-tuning</strong>: The pre-trained model is then fine-tuned on a smaller, task-specific dataset. This involves supervised learning, where the model adjusts its parameters to perform specific tasks like text classification, question answering, or sentiment analysis.</p></li>
+</ol>
+</section>
+<section id="optimization-and-loss-functions">
+<h4>Optimization and Loss Functions<a class="headerlink" href="#optimization-and-loss-functions" title="Permalink to this heading">#</a></h4>
+<ul class="simple">
+<li><p><strong>Gradient Descent</strong>: The backbone of the training process, where the model’s parameters are adjusted to minimize the loss function.</p></li>
+<li><p><strong>Backpropagation</strong>: Used to calculate the gradients of the loss function with respect to the model parameters.</p></li>
+<li><p><strong>Adaptive Learning Rate Optimizers</strong>: Such as Adam, are commonly used for training, as they help in adjusting the learning rate during training, which can lead to faster convergence.</p></li>
+<li><p><strong>Cross-Entropy Loss</strong>: Often used as the loss function for classification tasks in LLMs. It measures the difference between the predicted probabilities and the actual distribution.</p></li>
+</ul>
+</section>
+<section id="mathematical-representation">
+<h4>Mathematical Representation<a class="headerlink" href="#mathematical-representation" title="Permalink to this heading">#</a></h4>
+<p>Given a sequence of tokens <span class="math notranslate nohighlight">\(X = (x_1, x_2, \ldots, x_n)\)</span>, the model aims to maximize the likelihood of predicting a target token <span class="math notranslate nohighlight">\(x_{t+1}\)</span> based on the context provided by the preceding tokens. The loss function <span class="math notranslate nohighlight">\(L\)</span> for a prediction can be represented as:</p>
+<div class="math notranslate nohighlight">
+\[ L = -\sum_{i} y_{i} \log(\hat{y}_{i}) \]</div>
+<p>where <span class="math notranslate nohighlight">\(y\)</span> is the one-hot encoded true distribution, and <span class="math notranslate nohighlight">\(\hat{y}\)</span> is the predicted probability distribution over the vocabulary. The goal of training is to minimize this loss across the training dataset.</p>
+</section>
+<section id="conclusion">
+<h4>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this heading">#</a></h4>
+<p>Training LLMs involves processing and learning from large datasets to capture the complexities of natural language, using a deep learning architecture that focuses on understanding the context and relationships between words. The training is computationally intensive and requires sophisticated optimization techniques to adjust millions of parameters effectively.</p>
+</section>
 </section>
 </section>
 </section>
@@ -662,7 +1346,37 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diving-deep-into-machine-learning">Diving deep into Machine Learning</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#defining-the-error-in-prediction-and-why-do-we-need-it">Defining the error in prediction and why do we need it?</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#finding-the-minimum-value-of-the-error-function-using-math-optimization">Finding the minimum value of the error function using math optimization</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradient-descent">Gradient Descent</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gradient-descent">Gradient Descent</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mathematical-explanation">Mathematical Explanation</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#application-in-machine-learning">Application in Machine Learning</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-gradient-descent-in-machine-learning">Using Gradient Descent in Machine Learning</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#does-our-current-error-function-work-with-gradient-descent">Does our current error function work with Gradient Descent?</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#training-using-gradient-descent">Training using Gradient Descent</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tips-and-tricks-to-training-traditional-ml-models">Tips and Tricks to training traditional ML models</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tuning-hyperparameters">Tuning Hyperparameters</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#feature-engineering">Feature Engineering</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#implementing-callbacks">Implementing Callbacks</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#machine-learning-v-s-deep-learning">Machine Learning v/s Deep Learning</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#issues-with-very-large-deep-learning-models">Issues with Very Large Deep Learning Models</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mitigation-strategies">Mitigation Strategies</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-are-llms-trained">How are LLMs trained?</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#transformer-architecture">Transformer Architecture</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#training-process">Training Process</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#optimization-and-loss-functions">Optimization and Loss Functions</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#mathematical-representation">Mathematical Representation</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#conclusion">Conclusion</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
