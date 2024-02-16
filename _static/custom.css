@@ -12,6 +12,15 @@ h2 {
     font-family: 'Andika', sans-serif;
 }
 
+h3 {
+    font-family: 'Andika', sans-serif;
+}
+
+h4 {
+    font-family: 'Andika', sans-serif;
+}
+
+
 :root[data-mode="light"] .CodeMirror {
     color: #000000;
     background-color: #ffffff;
