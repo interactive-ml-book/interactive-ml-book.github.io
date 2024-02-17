@@ -3,9 +3,9 @@
 
 format: jb-book
 root: intro.ipynb
-# chapters:
-# - file: markdown
-# - file: notebooks
+chapters:
+- file: to-do-list.ipynb
+- file: cse-workshop-2024.ipynb
 # - file: markdown-notebooks
 
 

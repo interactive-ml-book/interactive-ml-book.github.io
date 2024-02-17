@@ -4,6 +4,7 @@ from IPython.display import HTML, display, clear_output
 import logging
 import re
 import io
+import time
 
 def start():
     logging.basicConfig(level=logging.INFO)
@@ -82,20 +83,20 @@ def show_local(quality_flag, sc, log_capture_string):
     log_contents = log_capture_string.getvalue()
     file_path_match = re.search(r"File ready at '(.+?)'", log_contents)
 
-    clear_output(wait=True)
-
     if file_path_match:
         original_file_path = file_path_match.group(1)
         videos_folder = '_static/videos'
         if not os.path.exists(videos_folder):
             os.makedirs(videos_folder)
+        timestamp = int(time.time())  # Getting current timestamp
         base_file_name = os.path.basename(original_file_path)
-        local_file_path = os.path.join(videos_folder, base_file_name)
+        # Modifying the filename to include the timestamp for uniqueness
+        unique_file_name = f"{os.path.splitext(base_file_name)[0]}_{timestamp}{os.path.splitext(base_file_name)[1]}"
+        local_file_path = os.path.join(videos_folder, unique_file_name)
         shutil.copy(original_file_path, local_file_path)
         
-        # print(f"Video copied to {local_file_path}")
+        # Updated to use the unique filename for video display
         clear_output(wait=True)
-        # Displaying the video from the local folder in the notebook
         display(HTML(f"""
         <div style="width: 100%;">
           <video width="100%" controls>

@@ -150,7 +150,7 @@ class Logo(MovingCameraScene):
 
         channel_name = VGroup()
         channel_name.add(Tex("Visualizing", font_size=10).move_to(ORIGIN))
-        channel_name.add(Tex("LeetCode", font_size=10).next_to(channel_name[0], DOWN, buff = 0))
+        channel_name.add(Tex("Machine Learning", font_size=10).next_to(channel_name[0], DOWN, buff = 0))
 
         # channel_name.scale(0.1)
         animations.append(FadeIn(channel_name))
@@ -158,13 +158,13 @@ class Logo(MovingCameraScene):
         self.play(*animations)
         self.wait(0.8)
 
-        self.play(self.camera.frame.animate.scale(0.1).move_to(channel_name).shift(RIGHT * 0.09), run_time = 3)
+        self.play(self.camera.frame.animate.scale(0.1).move_to(channel_name), run_time = 3)
 
-        leetcode_svg = "manim_utils/leetcode.svg"
-        leetcode_logo = SVGMobject(leetcode_svg).scale(0.11)
-        leetcode_logo[2].set_color(WHITE)
+        # leetcode_svg = "manim_utils/leetcode.svg"
+        # leetcode_logo = SVGMobject(leetcode_svg).scale(0.11)
+        # leetcode_logo[2].set_color(WHITE)
 
         # print("Number of elements", len(leetcode_logo))
-        leetcode_logo.next_to(channel_name, RIGHT, buff = 0.02)
-        self.play(Create(leetcode_logo), run_time = 1)
+        # leetcode_logo.next_to(channel_name, RIGHT, buff = 0.02)
+        # self.play(Create(leetcode_logo), run_time = 1)
         self.wait()
